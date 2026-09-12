@@ -7,7 +7,9 @@ package co.wethinkcode.healthsafe.mq;
  */
 public final class MqConfig {
 
+//    tell services where mq is running
     public static final String BROKER_URL = "tcp://localhost:61616";
+//    destination where events will be published
     public static final String TOPIC = "staffing-events-topic";
 
     private MqConfig() {

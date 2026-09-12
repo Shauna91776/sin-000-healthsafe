@@ -9,6 +9,7 @@ public class StaffingServiceApp {
     public static void main(String[] args) {
         AlertLevelClient alertLevelClient = new AlertLevelClient();
         WardClient wardClient = new WardClient();
+        MqPublisher mqPublisher = new MqPublisher();
         Javalin app = Javalin.create().start(7033);
 
         app.get("/health", ctx -> ctx.result("OK"));
@@ -37,6 +38,11 @@ public class StaffingServiceApp {
 
                 StaffingCalculator calculator = new StaffingCalculator();
                 int doctorsOnCall = calculator.calculateDoctorsOnCall(alertLevel);
+
+                mqPublisher.publish(new StaffingEvent(
+                        ward.getWardId(),
+                        alertLevel
+                ));
 
                 Staffing staffing = new Staffing(
                         ward.getWardId(),

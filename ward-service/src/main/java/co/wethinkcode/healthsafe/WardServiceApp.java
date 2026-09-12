@@ -8,9 +8,15 @@ public class WardServiceApp {
 
     public static void main(String[] args) {
         WardClient wardClient = new WardClient();
+        MqSubscriber mqSubscriber = new MqSubscriber();
         Javalin app = Javalin.create().start(7031);
 
         app.get("/health", ctx -> ctx.result("OK"));
+        try {
+            mqSubscriber.subscribe();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
 
         // TODO (Provides lists of wards and departments.)

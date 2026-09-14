@@ -6,7 +6,10 @@ import java.util.List;
 
 public class WardServiceApp {
 
+
     public static void main(String[] args) {
+        EquipmentFailurePublisher equipmentFailurePublisher =
+                new EquipmentFailurePublisher();
         WardClient wardClient = new WardClient();
         MqSubscriber mqSubscriber = new MqSubscriber();
         Javalin app = Javalin.create().start(7031);
@@ -43,6 +46,47 @@ public class WardServiceApp {
 
             ctx.status(404);
             ctx.result("Ward not found");
+        });
+
+        app.post("/wards/{id}/equipment-failure", ctx -> {
+
+            String wardId = ctx.pathParam("id");
+
+            Ward ward = null;
+            List<Ward> wards = wardClient.getWards();
+
+            for (Ward currentWard : wards) {
+                if (currentWard.getWardId().equalsIgnoreCase(wardId)) {
+                    ward = currentWard;
+                    break;
+                }
+            }
+
+            if (ward == null) {
+                ctx.status(404);
+                ctx.result("Ward not found");
+                return;
+            }
+
+            EquipmentFailureEvent event =
+                    ctx.bodyAsClass(EquipmentFailureEvent.class);
+
+            EquipmentFailureEvent failureEvent =
+                    new EquipmentFailureEvent(
+                            ward.getWardId(),
+                            event.getEquipment()
+                    );
+
+            try {
+                equipmentFailurePublisher.publish(failureEvent);
+
+                ctx.status(202);
+                ctx.json(failureEvent);
+
+            } catch (Exception e) {
+                ctx.status(502);
+                ctx.result("Unable to publish equipment failure");
+            }
         });
     }
 }
